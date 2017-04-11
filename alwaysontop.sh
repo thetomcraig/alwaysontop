@@ -26,6 +26,7 @@ function _gototop_bash {
     # go to the top of the screen and clear in both directions
     # zsh seems to have very strong opinions about redrawing all of the screen
     # when this is called
+
     tput cup 0 0 
     tput el 
     tput el1
@@ -47,6 +48,7 @@ function alwaysontop {
                 # when you do that, go to the top of the screen and clear in both directions
                 PROMPT_COMMAND="$PROMPT_COMMAND ; _gototop_bash"
                 PROMPT_COMMAND=$(echo $PROMPT_COMMAND | sed -e 's/;\s*;/;/')
+                PROMPT_COMMAND=$(echo poop)
             else
                 PROMPT_COMMAND=" _gototop_bash "
             fi
@@ -103,21 +105,20 @@ function autoclear {
                 zle original-accept-line
             }
             zle -N accept-line
-            
         fi
         PS1="$AUTOCLEAR_INDICATOR$PS1"
-        
     fi
-    
+   
     # since we are going to be clearing the screen after every command, might as well have cd also be an ls
     alias "cd"=cdls
-    
+ 
     # all those little navigation functions that basically just cd into a directory?
     # let them know to use the new cd function
     # i'm thinking, for example, of whatever magic rvm uses
     renavigate    
     
     echo -e "[alwaysontop.sh] ${COLOR_BIYellow}autoclear${COLOR_off} ${COLOR_BGreen}ON${COLOR_off}."
+
 }
 
 
@@ -186,12 +187,8 @@ function cdls {
     
     VERSION_STATUS_CMD="(($GIT_CMD) || ($SVN_CMD))"
     
-    
-    command cd "$DIR" && ((eval $VERSION_STATUS_CMD && hr); eval $LSCMD | head -n $DISPLAY_LINES ) &&  
-    if [[ $( eval $LSCMD | wc -l ) -gt $DISPLAY_LINES ]]; then
-        echo "..."
-        eval $LSCMD | tail -n 3
-    fi
+    #Using tree instead of ls 
+    command cd "$DIR" && tree -C -L 1
 }
 
 
@@ -271,8 +268,9 @@ fi
 
 
 ## the custom indicators
-export ALWAYSONTOP_INDICATOR="${PROMPT_COLOR_BIPurple}↑↑${PROMPT_COLOR_off} "
-export AUTOCLEAR_INDICATOR="${PROMPT_COLOR_BIYellow}◎${PROMPT_COLOR_off} "
+# Disabling these because I want to save space - Tom Craig
+#export ALWAYSONTOP_INDICATOR="${PROMPT_COLOR_BIPurple}↑↑${PROMPT_COLOR_off} "
+#export AUTOCLEAR_INDICATOR="${PROMPT_COLOR_BIYellow}◎${PROMPT_COLOR_off} "
 
 #export ALWAYSONTOP_INDICATOR="^^ "
 #export AUTOCLEAR_INDICATOR="@@ "
