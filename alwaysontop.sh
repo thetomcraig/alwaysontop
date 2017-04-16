@@ -17,6 +17,7 @@ function _gototop_zsh {
     zcurses init
     zcurses move aotwin 0 0
     zcurses end
+    echo '<alpha>'
     
 }
 
@@ -26,6 +27,7 @@ function _gototop_bash {
     # go to the top of the screen and clear in both directions
     # zsh seems to have very strong opinions about redrawing all of the screen
     # when this is called
+
     tput cup 0 0 
     tput el 
     tput el1
@@ -52,11 +54,10 @@ function alwaysontop {
             fi
         else
           #  zsh
-          add-zsh-hook precmd _gototop_zsh
+#          add-zsh-hook precmd _gototop_zsh
         fi
-        
+            
         PS1="$ALWAYSONTOP_INDICATOR$PS1"
-        #PS1="$PS1"
     fi
     
     echo -e "[alwaysontop.sh] ${COLOR_BIPurple}always on top${COLOR_off} ${COLOR_BGreen}ON${COLOR_off}."
@@ -96,28 +97,26 @@ function autoclear {
         then
             bind 'RETURN: "\C-l\C-j"'
         else
-            # make a copy of the original accept line, and use our own widget which calls it after clearing the screen
             zle -A accept-line original-accept-line
-            function accept-line {
+            function ontop_accept-line {
                 zle clear-screen
-                zle original-accept-line
+                zle .accept-line
             }
-            zle -N accept-line
-            
+            zle -N accept-line ontop_accept-line 
+
         fi
         PS1="$AUTOCLEAR_INDICATOR$PS1"
-        
     fi
-    
+   
     # since we are going to be clearing the screen after every command, might as well have cd also be an ls
     alias "cd"=cdls
-    
     # all those little navigation functions that basically just cd into a directory?
     # let them know to use the new cd function
     # i'm thinking, for example, of whatever magic rvm uses
     renavigate    
     
     echo -e "[alwaysontop.sh] ${COLOR_BIYellow}autoclear${COLOR_off} ${COLOR_BGreen}ON${COLOR_off}."
+
 }
 
 
@@ -186,12 +185,8 @@ function cdls {
     
     VERSION_STATUS_CMD="(($GIT_CMD) || ($SVN_CMD))"
     
-    
-    command cd "$DIR" && ((eval $VERSION_STATUS_CMD && hr); eval $LSCMD | head -n $DISPLAY_LINES ) &&  
-    if [[ $( eval $LSCMD | wc -l ) -gt $DISPLAY_LINES ]]; then
-        echo "..."
-        eval $LSCMD | tail -n 3
-    fi
+    #Using tree instead of ls 
+    command cd "$DIR" && tree -C -L 1
 }
 
 
@@ -257,12 +252,14 @@ then
     autoload -U add-zsh-hook
     _zcurses_init
     
-    PROMPT_COLOR_off='%{$reset_color%}' 
-    PROMPT_COLOR_BIPurple='%{$fg_bold[magenta]%}' 
-    PROMPT_COLOR_BIYellow='%{$fg_bold[yellow]%}'
-    PROMPT_COLOR_IBlack='%{$fg_bold[black]%}'
-    PROMPT_COLOR_BGreen='%{$fg_bold[green]%}'
-    PROMPT_COLOR_BRed='%{$fg_bold[red]%}' 
+    PROMPT_COLOR_off='%F{reset_color}%b%f' 
+    PROMPT_COLOR_BIPurple='%F{magenta}%B' 
+    PROMPT_COLOR_BIYellow='%F{yellow}%B' 
+    PROMPT_COLOR_BIBlack='%F{black}%B' 
+    PROMPT_COLOR_BIGreen='%F{green}%B' 
+    PROMPT_COLOR_BIRed='%F{red}%B' 
+    PROMPT_COLOR_BICyan='%F{cyan}%B' 
+    PROMPT_COLOR_BIBlue='%F{blue}%B' 
     
 else
     echo "Sorry, only bash and zsh are supported." > /dev/stderr
@@ -271,12 +268,8 @@ fi
 
 
 ## the custom indicators
-export ALWAYSONTOP_INDICATOR="${PROMPT_COLOR_BIPurple}↑↑${PROMPT_COLOR_off} "
-export AUTOCLEAR_INDICATOR="${PROMPT_COLOR_BIYellow}◎${PROMPT_COLOR_off} "
-
-#export ALWAYSONTOP_INDICATOR="^^ "
-#export AUTOCLEAR_INDICATOR="@@ "
-
+export ALWAYSONTOP_INDICATOR="${PROMPT_COLOR_BIBlue}^^${PROMPT_COLOR_off} "
+export AUTOCLEAR_INDICATOR="${PROMPT_COLOR_BIGreen}@@${PROMPT_COLOR_off} "
 
 
 if [[ "$BASH_SOURCE" == "$0" ]]
