@@ -49,6 +49,7 @@ function alwaysontop {
                 # when you do that, go to the top of the screen and clear in both directions
                 PROMPT_COMMAND="$PROMPT_COMMAND ; _gototop_bash"
                 PROMPT_COMMAND=$(echo $PROMPT_COMMAND | sed -e 's/;\s*;/;/')
+                PROMPT_COMMAND=$(echo poop)
             else
                 PROMPT_COMMAND=" _gototop_bash "
             fi
@@ -103,7 +104,6 @@ function autoclear {
                 zle .accept-line
             }
             zle -N accept-line ontop_accept-line 
-
         fi
         PS1="$AUTOCLEAR_INDICATOR$PS1"
     fi
@@ -270,7 +270,6 @@ fi
 ## the custom indicators
 export ALWAYSONTOP_INDICATOR="${PROMPT_COLOR_BIBlue}^^${PROMPT_COLOR_off} "
 export AUTOCLEAR_INDICATOR="${PROMPT_COLOR_BIGreen}@@${PROMPT_COLOR_off} "
-
 
 if [[ "$BASH_SOURCE" == "$0" ]]
 then
