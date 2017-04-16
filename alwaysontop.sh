@@ -17,7 +17,6 @@ function _gototop_zsh {
     zcurses init
     zcurses move aotwin 0 0
     zcurses end
-    echo '<alpha>'
     
 }
 
