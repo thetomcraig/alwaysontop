@@ -53,9 +53,8 @@ function alwaysontop {
           #  zsh
           # add-zsh-hook precmd _gototop_zsh
         fi
-        
+            
         PS1="$ALWAYSONTOP_INDICATOR$PS1"
-        #PS1="$PS1"
     fi
     
     echo -e "[alwaysontop.sh] ${COLOR_BIPurple}always on top${COLOR_off} ${COLOR_BGreen}ON${COLOR_off}."
@@ -95,21 +94,18 @@ function autoclear {
         then
             bind 'RETURN: "\C-l\C-j"'
         else
-            function _new-accept-line {
-                echo "clearing the screen" >> ~/a.out
+            zle -A accept-line original-accept-line
+            function ontop_accept-line {
                 zle clear-screen
                 zle .accept-line
             }
-            zle -N _new-accept-line
-            zle -N accept-line _new-accept-line
+            zle -N accept-line ontop_accept-line 
         fi
         PS1="$AUTOCLEAR_INDICATOR$PS1"
         
     fi
     
-    # since we are going to be clearing the screen after every command, might as well have cd also be an ls
-    # alias "cd"=cdls
-    
+    alias "cd"=cdtree
     # all those little navigation functions that basically just cd into a directory?
     # let them know to use the new cd function
     # i'm thinking, for example, of whatever magic rvm uses
@@ -160,7 +156,7 @@ function hr {
 }
 
 
-function cdls {
+function cdtree {
     # go into a directory
     # if that succees, print the git status and a horizontal rule (if we are in a git repository)
     # then print the directory contents, abbreviating if necessary
@@ -172,7 +168,7 @@ function cdls {
     # -x is for columns
     # CLICOLOR_FORCE and COLUMNS is for ls
     DISPLAY_LINES=20
-    LSCMD="CLICOLOR_FORCE=1 COLUMNS=$(tput cols) ls -Gp -x "
+    TREECMD="tree -C -L 1"
     DIR="$@"  
    
     if [[ "$@" == "" ]]
@@ -188,11 +184,10 @@ function cdls {
     
     VERSION_STATUS_CMD="(($GIT_CMD) || ($SVN_CMD))"
     
-    
-    command cd "$DIR" && ((eval $VERSION_STATUS_CMD && hr); eval $LSCMD | head -n $DISPLAY_LINES ) &&  
-    if [[ $( eval $LSCMD | wc -l ) -gt $DISPLAY_LINES ]]; then
+    cd $DIR && ((eval $VERSION_STATUS_CMD && hr); eval $TREECMD | head -n $DISPLAY_LINES ) &&  
+    if [[ $( eval $TREECMD | wc -l ) -gt $DISPLAY_LINES ]]; then
         echo "..."
-        eval $LSCMD | tail -n 3
+        eval $TREECMD | tail -n 3
     fi
 }
 function renavigate {
@@ -246,12 +241,14 @@ then
     autoload -U add-zsh-hook
     _zcurses_init
     
-#    PROMPT_COLOR_off='%{$reset_color%}' 
-#    PROMPT_COLOR_BIPurple='%{$fg_bold[magenta]%}' 
-#    PROMPT_COLOR_BIYellow='%{$fg_bold[yellow]%}'
-#    PROMPT_COLOR_IBlack='%{$fg_bold[black]%}'
-#    PROMPT_COLOR_BGreen='%{$fg_bold[green]%}'
-#    PROMPT_COLOR_BRed='%{$fg_bold[red]%}' 
+    PROMPT_COLOR_off='%F{reset_color}%b%f' 
+    PROMPT_COLOR_BIPurple='%F{magenta}%B' 
+    PROMPT_COLOR_BIYellow='%F{yellow}%B' 
+    PROMPT_COLOR_BIBlack='%F{black}%B' 
+    PROMPT_COLOR_BIGreen='%F{green}%B' 
+    PROMPT_COLOR_BIRed='%F{red}%B' 
+    PROMPT_COLOR_BICyan='%F{cyan}%B' 
+    PROMPT_COLOR_BIBlue='%F{blue}%B' 
     
 else
     echo "Sorry, only bash and zsh are supported." > /dev/stderr
