@@ -13,11 +13,10 @@ function _zcurses_init {
 
 
 function _gototop_zsh {
-    
     zcurses init
     zcurses move aotwin 0 0
     zcurses end
-    
+
 }
 
 
@@ -26,7 +25,6 @@ function _gototop_bash {
     # go to the top of the screen and clear in both directions
     # zsh seems to have very strong opinions about redrawing all of the screen
     # when this is called
-
     tput cup 0 0 
     tput el 
     tput el1
@@ -48,13 +46,12 @@ function alwaysontop {
                 # when you do that, go to the top of the screen and clear in both directions
                 PROMPT_COMMAND="$PROMPT_COMMAND ; _gototop_bash"
                 PROMPT_COMMAND=$(echo $PROMPT_COMMAND | sed -e 's/;\s*;/;/')
-                PROMPT_COMMAND=$(echo poop)
             else
                 PROMPT_COMMAND=" _gototop_bash "
             fi
         else
           #  zsh
-          add-zsh-hook precmd _gototop_zsh
+          # add-zsh-hook precmd _gototop_zsh
         fi
         
         PS1="$ALWAYSONTOP_INDICATOR$PS1"
@@ -76,7 +73,7 @@ function unalwaysontop {
             fi
         else
             # zsh
-            add-zsh-hook -d precmd _gototop_zsh  
+            # add-zsh-hook -d precmd _gototop_zsh  
         fi
         ALWAYSONTOP="FALSE"
        
@@ -98,27 +95,27 @@ function autoclear {
         then
             bind 'RETURN: "\C-l\C-j"'
         else
-            # make a copy of the original accept line, and use our own widget which calls it after clearing the screen
-            zle -A accept-line original-accept-line
-            function accept-line {
+            function _new-accept-line {
+                echo "clearing the screen" >> ~/a.out
                 zle clear-screen
-                zle original-accept-line
+                zle .accept-line
             }
-            zle -N accept-line
+            zle -N _new-accept-line
+            zle -N accept-line _new-accept-line
         fi
         PS1="$AUTOCLEAR_INDICATOR$PS1"
+        
     fi
-   
+    
     # since we are going to be clearing the screen after every command, might as well have cd also be an ls
-    alias "cd"=cdls
- 
+    # alias "cd"=cdls
+    
     # all those little navigation functions that basically just cd into a directory?
     # let them know to use the new cd function
     # i'm thinking, for example, of whatever magic rvm uses
     renavigate    
     
     echo -e "[alwaysontop.sh] ${COLOR_BIYellow}autoclear${COLOR_off} ${COLOR_BGreen}ON${COLOR_off}."
-
 }
 
 
@@ -177,7 +174,11 @@ function cdls {
     DISPLAY_LINES=20
     LSCMD="CLICOLOR_FORCE=1 COLUMNS=$(tput cols) ls -Gp -x "
     DIR="$@"  
-    
+   
+    if [[ "$@" == "" ]]
+    then
+      DIR="$HOME"
+    fi
 
     GIT_CMD="git -c color.status=always status -bs 2>/dev/null"
     SVN_CMD='[[ -d .svn ]] && (
@@ -187,24 +188,23 @@ function cdls {
     
     VERSION_STATUS_CMD="(($GIT_CMD) || ($SVN_CMD))"
     
-    #Using tree instead of ls 
-    command cd "$DIR" && tree -C -L 1
+    
+    command cd "$DIR" && ((eval $VERSION_STATUS_CMD && hr); eval $LSCMD | head -n $DISPLAY_LINES ) &&  
+    if [[ $( eval $LSCMD | wc -l ) -gt $DISPLAY_LINES ]]; then
+        echo "..."
+        eval $LSCMD | tail -n 3
+    fi
 }
-
-
 function renavigate {
     ## reloads my navigation functions so that they get the new cd alias
     ## or do nothing
     ## think of the magic that rvm does with your cd function, for example
-
     # source $BASHINCLUDES_DIR/navigation.sh
     ## or
     # echo "[autotop.sh] renavigate not implemented." > /dev/stderr
     ## or noop
     :
 }
-
-
 function alwaysontop_help {
     echo -e "alwaysontop.sh - keep the prompt at the top of the screen."
     echo -e "Peter Swire - swirepe.com"
@@ -223,21 +223,13 @@ function alwaysontop_help {
     echo -e "    "
     echo -e "    alwaysontop indicator:  ${COLOR_BIPurple}↑↑${COLOR_off}"
     echo -e "    autoclear indicator:    ${COLOR_BIYellow}◎${COLOR_off}"
-
 }
-
-
-
-
 COLOR_off='\033[0m' 
 COLOR_BIPurple='\033[1;95m' 
 COLOR_BIYellow='\033[1;93m'
 COLOR_IBlack='\033[0;90m'
 COLOR_BGreen='\033[1;32m'
 COLOR_BRed='\033[1;31m'
-
-
-
 # setup the colors used here for the two shells we support
 if [[ "$SHELL" == *"bash" ]]
 then
@@ -254,29 +246,22 @@ then
     autoload -U add-zsh-hook
     _zcurses_init
     
-    PROMPT_COLOR_off='%{$reset_color%}' 
-    PROMPT_COLOR_BIPurple='%{$fg_bold[magenta]%}' 
-    PROMPT_COLOR_BIYellow='%{$fg_bold[yellow]%}'
-    PROMPT_COLOR_IBlack='%{$fg_bold[black]%}'
-    PROMPT_COLOR_BGreen='%{$fg_bold[green]%}'
-    PROMPT_COLOR_BRed='%{$fg_bold[red]%}' 
+#    PROMPT_COLOR_off='%{$reset_color%}' 
+#    PROMPT_COLOR_BIPurple='%{$fg_bold[magenta]%}' 
+#    PROMPT_COLOR_BIYellow='%{$fg_bold[yellow]%}'
+#    PROMPT_COLOR_IBlack='%{$fg_bold[black]%}'
+#    PROMPT_COLOR_BGreen='%{$fg_bold[green]%}'
+#    PROMPT_COLOR_BRed='%{$fg_bold[red]%}' 
     
 else
     echo "Sorry, only bash and zsh are supported." > /dev/stderr
     return 1
 fi
-
-
 ## the custom indicators
-# Disabling these because I want to save space - Tom Craig
-#export ALWAYSONTOP_INDICATOR="${PROMPT_COLOR_BIPurple}↑↑${PROMPT_COLOR_off} "
-#export AUTOCLEAR_INDICATOR="${PROMPT_COLOR_BIYellow}◎${PROMPT_COLOR_off} "
-
+export ALWAYSONTOP_INDICATOR="${PROMPT_COLOR_BIPurple}↑↑${PROMPT_COLOR_off} "
+export AUTOCLEAR_INDICATOR="${PROMPT_COLOR_BIYellow}◎${PROMPT_COLOR_off} "
 #export ALWAYSONTOP_INDICATOR="^^ "
 #export AUTOCLEAR_INDICATOR="@@ "
-
-
-
 if [[ "$BASH_SOURCE" == "$0" ]]
 then
     echo "[alwaysontop.sh] You should source this file." > /dev/stderr
@@ -287,5 +272,3 @@ else
     echo "    "  
     alwaysontop_help
 fi
-
-
